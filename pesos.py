@@ -1,47 +1,42 @@
-#Para asiganarle los correspondientes pesos a las imágenes de cattlerscanner
+#Para asiganarle los correspondientes pesos a las imágenes de cattlerscanner y separar 
+#aquellas que no los tienen
 import os
 import cv2
 
+#Variables y listas
 timestamp = []
 weights = []
+font = cv2.FONT_HERSHEY_SIMPLEX
 
-file1 = open("report_20200701-131430.csv","r")
-file2 = open("report_20200703-101254.csv","r")
+#Rutas
+path = "device60003"
 
-#Paso los datos de timestamp y weight a dos listas para poder manejarlos aparte
-for linea1 in file1:
-	columna1 = linea1.split(",")
-	timestamp.append(columna1[0])
-	weights.append(columna1[1])
+#Directorios
+os.mkdir("vacas_con_pesos") #Ojo! con incluir dentro del for. El directorio se tiene que generar una vez.
+os.mkdir("vacas_sin_pesos")
 
-for linea2 in file2:
-	columna2 = linea2.split(",")
-	timestamp.append(columna2[0])
-	weights.append(columna2[1])
+for file in os.listdir(path): #Empieza agarrando los archivos en otro orden / investigar cómo itera listdir
+	if file.endswith(".csv") == True:
+		with open("csv/"+str(file))	as file_csv:
+		for linea in file_csv:
+			columna = linea.split(",")
+			timestamp.append(columna[0])
+			weights.append(columna[1])
+	else:
+		pass
 
-#Elimino los headers "weight" y "timestamp"
-weights.remove(' weight')
-weights.remove(' weight')
-timestamp.remove('timestamp')
-timestamp.remove('timestamp')
-
-#Junto los datos y los diccionarizo
 datos = dict(zip(timestamp,weights))
 
-#Edito imágenes
-font = cv2.FONT_HERSHEY_SIMPLEX
-for file in os.listdir("imagenes/cattlescanner_data"):
-	file_name = os.path.splitext(file)[0]
-	img = cv2.imread("imagenes/cattlescanner_data/"+str(file))
-	if (file_name in datos) == True:
-		cv2.putText(img,datos[file_name]+' Kg',(10,50), font, 1,(0,0,0),2)
-		cv2.imwrite("imagenes/vacas_con_pesos/" + str(file),img)
+for file in os.listdir(path):
+	if file.endswith(".png") == True:
+		file_name = os.path.splitext(file)[0]
+		img = cv2.imread(path+str(file))
+		if (file_name in datos) == True:
+			cv2.putText(img,datos[file_name]+' Kg',(10,50), font, 1,(0,0,0),2)
+			cv2.imwrite("vacas_con_pesos/" + str(file),img)
+		else:
+			if (file_name in datos) == False:
+				cv2.imwrite("vacas_sin_pesos/" + str(file),img)
 	else:
-		if (file_name in datos) == False:
-			cv2.imwrite("imagenes/vacas_sin_pesos/" + str(file),img)
+		pass
 
-'''
-el hamiltoniano es un observable
-'''
-file1.close()
-file2.close()
